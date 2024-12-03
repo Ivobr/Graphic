@@ -1,0 +1,14 @@
+<!DOCTYPE html> <html> <body>
+<canvas id="myCanvas" width="200" height="200" style="border:1px solid #000000;">
+<script>
+var c = document.getElementById("myCanvas");
+var ctx = c.getContext("2d");
+ctx.beginPath(); 
+ctx.moveTo(20,20);
+ctx.lineTo(100,20);
+ctx.lineTo(150,100);
+ctx.arc(110, 100, 40, 0, 1.2 * Math.PI);
+ctx.lineTo(20,20);
+ctx.stroke();
+</script>
+</body> </html>

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <audio id="audio" src="OST1.mp3"></audio>
+    <audio id="lazersfx" src="lazer.mp3"></audio>
+    <audio id="explosionsfx" src="explosion.mp3"></audio>
+    <canvas id="myCanvas" width="1000" height="800" style="border:1px solid black;"></canvas>
+
+    <script>
+        var width = 500;
+        var height = 400;
+
+        // Get the audio element
+        const lazersfx = document.getElementById("lazersfx");
+        const audio = document.getElementById("audio");
+        const explosionsfx = document.getElementById("explosionsfx");
+
+        lazersfx.volume = 0.1;
+        audio.volume = 0.5;
+        explosionsfx.volume = 0.1;
+
+
+        //canvas code
+        var c = document.getElementById("myCanvas");
+        var ctx = c.getContext("2d");
+
+        //transform canvas to cartesian coordinates
+
+        var playerWidth = 30;
+        var playerHeight = 40;
+        var playerSpeed = 20;
+        var playerRotation = 0;
+        var targetRotation = 0;
+        var rotationSpeed = 0.1;
+        var playerLocation = [0, 0];
+        var playerTargetLocation = [...playerLocation];  // Target position for smooth movement
+        var playerLerpSpeed = 0.1; // Adjust this value for smoother or quicker movement
+
+        var beams = [];
+        var beamSpeed = 8;
+
+        var enemies = [];  // Array to store enemies
+        var enemySpeed = 2;
+
+
+        var stars = [];  // Array to store stars
+        var numStars = 100; // Number of stars to create
+        // Event listeners
+
+        // Adjust canvas size on load and window resize
+        window.addEventListener("resize", () => {
+            ctx.resetTransform(); // Reset transformations before resizing
+            resizeCanvas();
+        });
+        resizeCanvas();
+
+
+        function resizeCanvas() {
+            c.width = window.innerWidth * 0.9;
+            c.height = window.innerHeight * 0.9;
+            width = c.width / 2;
+            height = c.height / 2;
+
+            // Transform canvas to cartesian coordinates
+            ctx.translate(width, height);
+            ctx.scale(1, -1);
+        }
+        document.addEventListener("keydown", keyDownHandler, false);
+        document.addEventListener("keyup", keyUpHandler, false);
+        var keyState = {
+            w: false,
+            a: false,
+            s: false,
+            d: false,
+            ArrowLeft: false,
+            ArrowRight: false,
+            space: false
+        };
+
+        function keyDownHandler(e) {
+            if (e.key === "w") keyState.w = true;
+            if (e.key === "a") keyState.a = true;
+            if (e.key === "s") keyState.s = true;
+            if (e.key === "d") keyState.d = true;
+            if (e.key === "ArrowLeft") keyState.ArrowLeft = true;
+            if (e.key === "ArrowRight") keyState.ArrowRight = true;
+            if (e.key === " " && !keyState.space) {
+                keyState.space = true;
+                shootBeam(); // Shoot a beam when space is pressed
+            }
+        }
+
+        function shootBeam() {
+            let beam = {
+                location: playerLocation.slice(),
+                rotation: playerRotation + Math.PI / 2,
+                length: 50,
+                speed: beamSpeed,
+                bounces: 0
+            };
+            beams.push(beam);
+            // Create a new Audio instance for the laser sound
+            let lazerSound = new Audio("lazer.mp3");
+            lazerSound.volume = 0.1;
+            lazerSound.play();
+
+        }
+
+        // Create improved enemies with a more dynamic look
+        function createEnemy() {
+            let enemy = {
+                location: [Math.random() * width * 2 - width, Math.random() * height * 2 - height],  // Random start location
+                speed: enemySpeed,
+                size: Math.random() * 40 + 20,  // Random size between 20 and 60
+                rotationSpeed: Math.random() * 0.05 + 0.02, // Random rotation speed
+                color: getRandomColor(),
+                angle: Math.random() * 2 * Math.PI  // Random initial rotation angle
+            };
+            enemies.push(enemy);
+        }
+
+        // Get a random color for the enemy
+        function getRandomColor() {
+            let r = Math.floor(Math.random() * 256);
+            let g = Math.floor(Math.random() * 256);
+            let b = Math.floor(Math.random() * 256);
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        // Update enemies with rotation and smoother movement
+        function updateEnemies() {
+            for (let enemy of enemies) {
+                // Rotate the enemy slightly for a cool effect
+                enemy.angle += enemy.rotationSpeed;
+
+                // Simple movement towards the player
+                let angleToPlayer = Math.atan2(playerLocation[1] - enemy.location[1], playerLocation[0] - enemy.location[0]);
+                enemy.location[0] += enemy.speed * Math.cos(angleToPlayer);
+                enemy.location[1] += enemy.speed * Math.sin(angleToPlayer);
+            }
+        }
+
+        // Draw enemies with cool design
+        function drawEnemies() {
+            for (let enemy of enemies) {
+                ctx.save(); // Save the current canvas state for transformation
+
+                // Move the canvas to the enemy's location
+                ctx.translate(enemy.location[0], enemy.location[1]);
+
+                // Rotate the canvas by the enemy's angle
+                ctx.rotate(enemy.angle);
+
+                // Draw the enemy with a more complex shape (e.g., a circle with spikes)
+                ctx.beginPath();
+                ctx.moveTo(0, -enemy.size);
+                for (let i = 0; i < 6; i++) {
+                    let angle = i * (Math.PI / 3); // Hexagonal pattern (6 points)
+                    let x = enemy.size * Math.cos(angle);
+                    let y = enemy.size * Math.sin(angle);
+                    ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+
+                // Add a fill with random colors for a cool effect
+                ctx.fillStyle = enemy.color;
+                ctx.fill();
+
+                ctx.restore(); // Restore the canvas state after drawing
+            }
+        }
+
+        function createStars() {
+            for (let i = 0; i < numStars; i++) {
+                let star = {
+                    x: Math.random() * width * 2 - width,  // Random X coordinate
+                    y: Math.random() * height * 2 - height,  // Random Y coordinate
+                    radius: Math.random() * 2 + 1  // Random size for star (between 1 and 3)
+                };
+                stars.push(star);
+            }
+        }
+        function updateBeams() {
+            for (let beam of beams) {
+                // Move the beam
+                beam.location[0] += beam.speed * Math.cos(beam.rotation);
+                beam.location[1] += beam.speed * Math.sin(beam.rotation);
+
+                // Check if the beam hits the left or right edge of the canvas
+                if (beam.location[0] <= -width || beam.location[0] >= width) {
+                    beam.rotation = Math.PI - beam.rotation; // Reverse horizontal direction
+                    beam.bounces++;
+                }
+
+                // Check if the beam hits the top or bottom edge of the canvas
+                if (beam.location[1] <= -height || beam.location[1] >= height) {
+                    beam.rotation = -beam.rotation; // Reverse vertical direction
+                    beam.bounces++;
+                }
+
+                // Collision detection with enemies
+                for (let i = 0; i < enemies.length; i++) {
+                    let enemy = enemies[i];
+
+                    // Calculate distance between beam and enemy center
+                    let dx = beam.location[0] - enemy.location[0];
+                    let dy = beam.location[1] - enemy.location[1];
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+
+                    // Calculate the beam's radius (assuming beam's length is a good approximation for the radius)
+                    let beamRadius = beam.length / 2;
+
+                    // Check if the beam's distance to the enemy center is less than the combined radii (beam's length + enemy's size)
+                    if (distance < beamRadius + enemy.size) {
+                        // Beam hits enemy, remove both
+                        enemies.splice(i, 1);  // Remove enemy
+                        beams.splice(beams.indexOf(beam), 1);  // Remove beam
+                        let explosionSound = new Audio("explosion.mp3");
+                        explosionSound.volume = 0.3;
+                        explosionSound.play();
+                        break;  // Stop checking other enemies
+                    }
+                }
+            }
+
+            // Remove the first beam if it has bounced more than 2 times
+            if (beams.length > 0 && beams[0].bounces > 2) beams.shift();
+        }
+
+
+
+
+        function setColor(time) {
+            let r = Math.abs(Math.sin(time / 1000 + 0)) * 255; // Red oscillates over time
+            let g = Math.abs(Math.sin(time / 1000 + 2)) * 255; // Green oscillates over time
+            let b = Math.abs(Math.sin(time / 1000 + 4)) * 255; // Blue oscillates over time
+
+            ctx.strokeStyle = `rgb(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)})`;
+            ctx.fillStyle = `rgb(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)})`;
+        }
+
+        function drawBeams() {
+            ctx.lineWidth = 2;
+            for (let beam of beams) {
+                let startX = beam.location[0];
+                let startY = beam.location[1];
+
+                let endX = startX + beam.length * Math.cos(beam.rotation);
+                let endY = startY + beam.length * Math.sin(beam.rotation);
+
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+            }
+        }
+
+
+
+        function keyUpHandler(e) {
+            if (e.key === "w") keyState.w = false;
+            if (e.key === "a") keyState.a = false;
+            if (e.key === "s") keyState.s = false;
+            if (e.key === "d") keyState.d = false;
+            if (e.key === "ArrowLeft") keyState.ArrowLeft = false;
+            if (e.key === "ArrowRight") keyState.ArrowRight = false;
+            if (e.key === " ") keyState.space = false;
+        }
+
+        // Start the animation loop
+        function gameLoop() {
+            let time = performance.now();
+            setColor(time);
+            updatePlayerPosition();
+            updateBeams();
+            updateEnemies();
+            drawFrame();
+            requestAnimationFrame(gameLoop); // Request the next frame
+            audio.play();
+        }
+        gameLoop(); // Start the loop
+
+        // Update player position
+        function updatePlayerPosition() {
+            // Calculate the desired movement direction
+            let dx = 0;
+            let dy = 0;
+
+            if (keyState.w) dy += playerSpeed;  // Moving up
+            if (keyState.a) dx -= playerSpeed;  // Moving left
+            if (keyState.s) dy -= playerSpeed;  // Moving down
+            if (keyState.d) dx += playerSpeed;  // Moving right
+
+            // Update the target position based on the direction
+            playerTargetLocation[0] = playerLocation[0] + dx;
+            playerTargetLocation[1] = playerLocation[1] + dy;
+
+            // Smoothly interpolate towards the target position
+            playerLocation[0] += (playerTargetLocation[0] - playerLocation[0]) * playerLerpSpeed;
+            playerLocation[1] += (playerTargetLocation[1] - playerLocation[1]) * playerLerpSpeed;
+
+            // Handle smooth rotation
+            if (keyState.ArrowLeft) targetRotation += 0.1;  // Increase target rotation
+            if (keyState.ArrowRight) targetRotation -= 0.1; // Decrease target rotation
+
+            // Smoothly interpolate the player's rotation toward the target rotation
+            let angleDifference = targetRotation - playerRotation;
+            if (angleDifference > Math.PI) angleDifference -= 2 * Math.PI; // Handle wraparound
+            if (angleDifference < -Math.PI) angleDifference += 2 * Math.PI; // Handle wraparound
+
+            playerRotation += angleDifference * rotationSpeed; // Smoothly rotate towards the target rotation
+        }
+        // Draw the player (as a triangle)
+        function drawPlayer() {
+            ctx.beginPath();
+            let p = [
+                [0, playerHeight / 2],               // Top vertex
+                [-playerWidth / 2, -playerHeight / 2], // Bottom-left vertex
+                [playerWidth / 2, -playerHeight / 2]   // Bottom-right vertex
+            ];
+
+            let rotatedVertices = p.map(([x, y]) => {
+                let rotatedX = x * Math.cos(playerRotation) - y * Math.sin(playerRotation);
+                let rotatedY = x * Math.sin(playerRotation) + y * Math.cos(playerRotation);
+                return [rotatedX + playerLocation[0], rotatedY + playerLocation[1]];
+            });
+            plotPoly(rotatedVertices);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // Clear canvas and draw everything
+        function drawFrame() {
+            ctx.clearRect(-500, -400, 1000, 800); // Clear canvas
+
+            ctx.fillStyle = "black";
+            ctx.fillRect(-500, -400, 1000, 800); // Draw black background
+            drawPlayer();
+            drawStars();
+            drawBeams();
+            drawEnemies();
+        }
+
+        function drawStars() {
+            ctx.fillStyle = "white";
+            for (let star of stars) {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+        }
+        function plotPoly(p) {
+            ctx.beginPath();
+            ctx.moveTo(p[0][0], p[0][1]);
+            for (let i = 1; i < p.length; i++) {
+                ctx.lineTo(p[i][0], p[i][1]);
+            }
+            ctx.lineTo(p[0][0], p[0][1]);
+            ctx.stroke();
+        }
+
+        // Periodically create new enemies
+        setInterval(createEnemy, 2000);  // Create a new enemy every 2 seconds
+        createStars();  // Create stars
+    </script>
+</body>
+
+</html>

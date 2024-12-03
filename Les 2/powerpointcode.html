@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <!-- <h1>Je hoeren moeder</h1> -->
+        <!-- <img src="./../Gif/The blokk - Made with Clipchamp.gif"> -->
+        <canvas id="myCanvas" width="640" height="480" style="border:5px solid black;"></canvas>
+        <script>
+            var c = document.getElementById("myCanvas");
+            var ctx = c.getContext("2d");
+            var p = [[200, 200], [400, 300], [240, 400]]
+            var T = [100, -100]
+            var S = 0.5;
+            ctx.strokeStyle ='orange';
+            
+            plotPoly(p);
+            for(let i = 0; i<p.length; i++){
+                p[i]=[p[i][0]+ T[0], p[i][1]+ T[1]];
+            }
+            ctx.strokeStyle='green';
+            plotPoly(p);
+            for (let i = 0; i < p.length; i++) 
+            { p[i] = [S*p[i][0], S*p[i][1]]; }
+            ctx.strokeStyle='pink';
+            plotPoly(p);
+            
+            function plotPoly(p){
+                ctx.beginPath();
+                ctx.moveTo(p[0][0], p[0] [1]);
+                for(let i = 1; i < p.length; i++){
+                    ctx.lineTo(p[i][0],p[i][1]);
+                }
+
+                ctx.lineTo(p[0][0], p[0][1]);
+                ctx.stroke();
+            }
+        </script>
+    </body>
+</html>

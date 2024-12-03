@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <canvas id="myCanvas" width="640" height="480" style="border:5px solid black"></canvas>
+        <script>
+            var c = document.getElementById("myCanvas");
+            var ctx = c.getContext("2d");
+
+            let startXcircle = 25;
+            let startYcircle = 0;
+
+            let XspeedCircle = 0;
+            let YspeedCircle = 0.8;
+
+            let mouseX = 0;
+            let mouseY = 0;
+
+            let XspeedTriangle = 0.5;
+            let YspeedTriangle = 0;
+
+            var p = [[10, 10], [10, 40], [40, 40]]; //x,y x,y x,y
+
+
+
+
+            
+            animate();
+
+            // Update mouse position on mouse move
+            c.addEventListener("mousemove", function (event) {
+                const rect = c.getBoundingClientRect();
+                mouseX = event.clientX - rect.left;
+                mouseY = event.clientY - rect.top;
+            });
+
+            function updatePoint() {
+                startXcircle += XspeedCircle;
+                startYcircle += YspeedCircle;
+
+                
+
+                if (startXcircle <= 0 || startXcircle >= c.width) XspeedCircle = -XspeedCircle;
+                if (startYcircle <= 0 || startYcircle >= c.height) YspeedCircle = -YspeedCircle;
+
+                draw();
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, c.width, c.height);
+                ctx.beginPath();
+
+                // Draw the mouse-tracked rectangle
+                ctx.fillStyle = "red";
+                ctx.fillRect(mouseX - 5, mouseY - 5, 10, 10);
+
+                // Draw the moving circle
+                ctx.arc(startXcircle, startYcircle, 15, 0, Math.PI * 2);
+                ctx.fillStyle = "blue";
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            function animate() {
+                updatePoint();
+                polyPlot(p);
+                requestAnimationFrame(animate);
+            }
+
+            function polyPlot(p) {
+                ctx.beginPath();
+                ctx.moveTo(p[0][0], p[0][1]);
+                for (let i = 1; i < p.length; i++) {
+                    ctx.lineTo(p[i][0], p[i][1]);
+                }
+                ctx.closePath();
+                ctx.strokeStyle = "orange";
+                ctx.stroke();
+            }
+
+        </script>
+    </body>
+</html>

@@ -1,0 +1,42 @@
+<!-- Ivo Bruinsma 1082102 -->
+<!DOCTYPE html>
+<html>
+    <body>
+        <canvas id="myCanvas" width="200" height="100" style="border:5px solid black;"></canvas>
+            <script>
+            var c = document.getElementById("myCanvas");
+            var ctx = c.getContext("2d");
+
+            function plotLine(x1, y1, x2, y2){
+                var startPoint = [x1, y1]; //make the starting- and endpoint
+                var endPoint = [x2, y2];
+
+                if(x2 > y2){ //check if the x value of the endpoint is bigger then the y value so that it can change the approche foe a smoother line
+                    var slope = (endPoint[1]-startPoint[1])/(endPoint[0]-startPoint[0]);
+
+                    for(let x = startPoint[0]; x<= endPoint[0]; x++){
+                        let y = Math.round(startPoint[1] + slope * (x - startPoint[0]));
+                        ctx.fillRect(x,y,1,1);
+
+                    }
+                    ctx.fillStyle = 'red'; 
+                    ctx.fillRect(startPoint[0],startPoint[1],1,1); //marks the starting- and endingpoint
+                    ctx.fillRect(endPoint[0],endPoint[1],1,1);
+                }else{
+                    var slope = (endPoint[0]-startPoint[0])/(endPoint[1]-startPoint[1]);
+
+                    for(let y = startPoint[1]; y<= endPoint[1]; y++){
+                        let x = Math.round(startPoint[0] + slope * (y-startPoint[1]));
+                        ctx.fillRect(x,y,1,1);
+                    }
+                    ctx.fillStyle = 'red'; 
+                    ctx.fillRect(startPoint[0],startPoint[1],1,1); //marks the starting- and endingpoint
+                    ctx.fillRect(endPoint[0],endPoint[1],1,1);
+                }
+                ctx.stroke();
+            }
+
+            plotLine(10, 10, 95, 5);
+        </script>    
+    </body>
+</html>

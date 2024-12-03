@@ -1,0 +1,13 @@
+<!DOCTYPE html> <html> <body>
+<canvas id="myCanvas" width="200" height="200" style="border:1px solid black;">
+<script>
+var c = document.getElementById("myCanvas");
+var ctx = c.getContext("2d");
+ctx.beginPath();
+ctx.moveTo(20, 20);
+ctx.bezierCurveTo(20, 100, 180, 100, 180, 20);
+ctx.stroke();
+ctx.fillRect(20,100,1,1);
+ctx.fillRect(180,100,1,1);
+</script>
+</body> </html>

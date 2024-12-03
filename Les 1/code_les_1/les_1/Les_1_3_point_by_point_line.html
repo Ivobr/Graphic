@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<canvas id="myCanvas" width="200" height="200" style="border:1px solid #d3d3d3;">
+
+<script>
+var c = document.getElementById("myCanvas");
+var ctx = c.getContext("2d");
+ctx.fillStyle = "green";
+var startPoint=[90,40];
+var endPoint=[10,10] ;
+// the following calculations come from the equation of a line between two points
+var m=(endPoint[1]-startPoint[1])/(endPoint[0]-startPoint[0]) ;
+for (let X = startPoint[0]; X < endPoint[0]; X++) {
+	let Y = Math.round(startPoint[1]+m*(X-startPoint[0]))
+	ctx.fillRect(X,Y,1,1); 
+}
+// highlight start and end point
+ctx.fillStyle = "red";
+ctx.fillRect(startPoint[0],startPoint[1],1,1) ;
+ctx.fillRect(endPoint[0],endPoint[1],1,1) ;
+</script>
+
+</body>
+</html>
