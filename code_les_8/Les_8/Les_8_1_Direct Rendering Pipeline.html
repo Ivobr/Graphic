@@ -1,0 +1,97 @@
+<!DOCTYPE html> <html> <body>
+<canvas id="myCanvas" width="640" height="480" style="border:5px solid #ff0000;">
+<script>
+var c = document.getElementById("myCanvas");
+var ctx = c.getContext("2d");
+// points of a terhehedron as a set of 4 triangles 
+var T =[[1,-1,0,1],[1,1,0,1],[-1,0,0,1]] ; // homogeneous coordinates
+var t=[1,0,0,1] ; // rotation center, Axis will be Y
+var Ar=45/180*Math.PI ; // rotation angle in radiants
+// building translation and rotation matrixes for rotation of Y rotation of -45 degrees  
+// around the (1,0,0) point
+var RT1=[[1,0,0,-t[0]],[0,1,0,-t[1]],[0,0,1,-t[2]],[0,0,0,1]] ; // forward translation matrix
+var RT2=[[1,0,0,t[0]],[0,1,0,t[1]],[0,0,1,t[2]],[0,0,0,1]] ; // back translation matrix 
+var Rx=[[1,0,0,0],[0,Math.cos(Ar),-Math.sin(Ar),0],[0,Math.sin(Ar),Math.cos(Ar),0],[0,0,0,1]] ;
+var Ry=[[Math.cos(Ar),0,Math.sin(Ar),0],[0,1,0,0],[-Math.sin(Ar),0,Math.cos(Ar),0],[0,0,0,1]] ;
+// scaling matrix
+var S=[[100,0,0,0],[0,100,0,0],[0,0,100,0],[0,0,0,1]] ; // uniform 100X scaling
+// //; translation by (10,5,2)
+var TT=[[1,0,0,100],[0,1,0,120],[0,0,1,20],[0,0,0,1]] ;
+// identity (used as a copy operator)
+var I=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]] ;
+
+// applies the transformations in order, we could combine them all otherwise
+// rotate around the (0,-1,0), (0,1,0) segment by -45
+R=multiplyMatrixByMatrix(I,RT1) ;
+R=multiplyMatrixByMatrix(Ry,R) ;
+R=multiplyMatrixByMatrix(RT2,R) ;
+T=multiplyMatrixByPoints(R,T) ;
+// scaling 10X uniform
+T=multiplyMatrixByPoints(S,T) ;
+// translate by (100,120,20)
+T=multiplyMatrixByPoints(TT,T) ;
+// parallel projection
+T=parallelProjection(T) ;
+// see the resulting points
+printPoints(T);
+// plot the result
+ctx.strokeStyle="blue";
+plotPoly(T) ;
+// end of code
+
+// support functions
+function plotPoly(p) {
+	ctx.beginPath(); 
+	ctx.moveTo(p[0][0],p[0][1]);
+	for (let i = 1; i <p.length; i++) // start from p[1] as plot is already in p[0]
+		{ ctx.lineTo(p[i][0],p[i][1]); }
+	ctx.lineTo(p[0][0],p[0][1]); // closing path
+	ctx.stroke();
+}
+
+function multiplyMatrixByVector(M,V) { // does not alter the vector
+    let R=[0,0,0,0] ;
+	for (let i=0 ; i<4; i++) {
+	  for (let j=0 ; j<4; j++) {
+	    R[i]+=M[i][j]*V[j] ;
+	  }
+	}
+	return(R);
+}
+
+function multiplyMatrixByMatrix(M1,M2) {
+let Mres=[[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]] ; //contains the initial result matrix
+for (let i=0 ; i<4; i++) {
+	for (let j=0; j<4;j++) {
+	    for (let k=0; k<4;k++) {
+	       Mres[i][j]+=M1[i][k]*M2[k][j] ;
+	      }
+	   }
+	} 
+return(Mres) ;
+}
+
+function multiplyMatrixByPoints(M,p) {
+    let q=[] ;
+	for (let i = 0; i <p.length; i++) 
+		{ q[i]=multiplyMatrixByVector(M,p[i]); }  
+    return(q) ;		
+}
+
+function printPoints(p) { // works both with normal and homogeneous coordinates
+    ctx.font = "30px Arial"; 
+	for (let i = 0; i <p.length; i++) 
+		{ ctx.fillText(p[i][0].toFixed(1),10,50*(i+1)+0) ;
+		  ctx.fillText(p[i][1].toFixed(1),110,50*(i+1)+0) ;
+		  ctx.fillText(p[i][2].toFixed(1),210,50*(i+1)+0) ;
+		  ctx.fillText(p[i][3].toFixed(1),310,50*(i+1)+0) ;
+		}
+}
+
+function parallelProjection(p) {
+    var parallelMatrix=[[1,0,0.5,0],[0,1,0.5,0],[0,0,0,0],[0,0,0,0]] ;
+	let f=multiplyMatrixByPoints(parallelMatrix,p) ; // projects all the points
+	return(f) ;
+}
+</script>
+</body> </html>

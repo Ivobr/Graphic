@@ -1,0 +1,15 @@
+vec4 mandel(vec2 pix) {
+  vec2 z;
+  int i;
+  for (i = 0; i < 100; i++) {
+    z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + pix;
+    if (length(z) > 2.0) break;
+  }
+  float r = float(i) / 100.0;
+  return vec4(r, 0, 1.0 - r, 1);
+}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {  
+    vec2 pix = 0.01 * (fragCoord - 0.5 * iResolution.xy) / iMouse.y - vec2(0.57, -0.49);
+    fragColor = mandel(pix);
+}

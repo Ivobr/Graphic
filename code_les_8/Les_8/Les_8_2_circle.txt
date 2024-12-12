@@ -1,0 +1,18 @@
+vec4 circle(vec2 pix) { 
+  float r = 0.2; // radius in relative coords.
+  if (pix.x*pix.x + pix.y*pix.y <= r*r) {
+    return vec4(0.9,0.0,0.3,1.0); 
+  }
+  return vec4(0.0,0.5,0.9,1.0);
+}
+
+vec4 checkBoard(vec2 pix) { 
+  vec2 p = floor(8.0*pix);
+  if (int(p.x+p.y) % 2 == 0) return vec4(0.0,1.0,0.0,1.0);
+  return vec4(1.0,0.0,0.0,1.0);
+}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord ){
+    vec2 pix = (fragCoord-0.5*iResolution.xy) / iResolution.y;
+    fragColor = circle(pix) ; 
+}
