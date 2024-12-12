@@ -1,130 +1,20 @@
-<!DOCTYPE html>
-<html>
-    <body>
-        <canvas id="myCanvas" width="640" height="480" style="border:5px solid black"></canvas>
-        <br/>
-        <text>To move the circle for left to right use the left and right arrowkeys.</text>
-        <br/>
-        <text>To move the triangle up and down use the up and down arrowkeys.</text>
-        <br/>
-        <text>Click the mouse to change the color of the rect</text>
+<!DOCTYPE html> <html> <body>
+    <canvas id="myCanvas" width="640" height="480" style="border:5px solid black">
         <script>
             var c = document.getElementById("myCanvas");
             var ctx = c.getContext("2d");
 
-            let Xcircle = 25;
-            let Ycircle = 15;
+            //4 triangels that make one 3d traingle (tetrahedron)
+            const triangle = [[50,50,50,1],[150,50,50,1],[150,150,50,1],
+		   [50,50,50,1],[150,50,50,1],[125,75,150,1],
+		   [50,50,50,1],[125,75,150,1],[150,150,50,1],
+		   [150,50,50,1],[150,150,50,1],[125,75,150,1]
+		  ];
 
-            let XspeedCircle = 0;
-            let YspeedCircle = 0.8;
+          const cube = generateCube([320,240,100,1],100);
 
-            let mouseX = 0;
-            let mouseY = 0;
-
-            color = "rgb(255,255,0)"
-
-            var p = [[10, 10], [10, 40], [40, 40]]; //x,y x,y x,y
-            var triangleSpeed = [0.5,0];
-            
-         
-            document.addEventListener("keydown", function (e){
-                if(e.key === "ArrowUp"){
-                   if(p[0][1]>=0){ //only if the upper corner is in the canvas
-                        for(let i = 0; i<p.length; i++){
-                            p[i]=[p[i][0] + 0, p[i][1] - 10];
-                        }
-                    }
-                }
-                else if(e.key === "ArrowDown"){
-                    if(p[2][1] <= c.height){ //only if the lower coner is in the canvas
-                        for(let i = 0; i<p.length; i++){
-                            p[i]=[p[i][0] + 0, p[i][1] + 10];
-                        }
-                    }
-                }
-                else if(e.key === "ArrowLeft"){
-                    if(Xcircle >= 20 ){ //only if the circle is in the canvas
-                        Xcircle -= 10;
-                       
-                    }
-                }
-                else if(e.key === "ArrowRight"){ //only if the circle is in the canvas
-                    if(Xcircle <= c.width - 20){
-                        Xcircle += 10;
-                    }
-                }
-            });
-
-            document.addEventListener("mousedown", function(e){
-                changeColor();
-            })
-
-            function changeColor(){
-                //select radom rgb value for the rect
-                let r = Math.floor(Math.random()* 256);
-                let g = Math.floor(Math.random()* 256);
-                let b = Math.floor(Math.random()* 256);
-
-                color = `rgb(${r}, ${g}, ${b})`;
-            }
-
-
-            
-            animate(); //start everything
-
-            // Update mouse position on mouse move
-            c.addEventListener("mousemove", function (event) {
-                const rect = c.getBoundingClientRect();
-                mouseX = event.clientX - rect.left;
-                mouseY = event.clientY - rect.top;
-            });
-
-            function updatePoint() {
-                
-                Ycircle += YspeedCircle;
-                for(let i = 0; i<p.length; i++){
-                    p[i] =[p[i][0]+ triangleSpeed[0], p[i][1] + triangleSpeed[1]];
-                }
-                
-
-                if (Ycircle <= 9 || Ycircle >= c.height-9) YspeedCircle = -YspeedCircle; //if circle hits bottom or top reverse
-                if(p[0][0]<=0 || p[2][0]>= c.width) triangleSpeed[0] = -triangleSpeed[0]; //if triangel hits side reverse
-
-                draw();
-            }
-
-            function draw() {
-                ctx.clearRect(0, 0, c.width, c.height);
-                ctx.beginPath();
-
-                // Draw the mouse-tracked rectangle
-                ctx.fillStyle = color;
-                ctx.fillRect(mouseX - 10, mouseY - 10, 20, 20);
-
-                // Draw the moving circle
-                ctx.arc(Xcircle, Ycircle, 15, 0, Math.PI * 2);
-                ctx.fillStyle = "blue";
-                ctx.fill();
-                ctx.closePath();
-            }
-
-            function animate() {
-                updatePoint();
-                polyPlot(p);
-                requestAnimationFrame(animate);
-            }
-
-            function polyPlot(p) {
-                ctx.beginPath();
-                ctx.moveTo(p[0][0], p[0][1]);
-                for (let i = 1; i < p.length; i++) { //draw the triangle
-                    ctx.lineTo(p[i][0], p[i][1]);
-                }
-                ctx.closePath();
-                ctx.strokeStyle = "black";
-                ctx.stroke();
-            }
-
+          var t = [100,100,100,1]; //rotation center and center of triangle
+          var s = [320,120,100,1]; //rotation point and center of cube
+          var Ar = -2.5/180*Math.PI; //rotation angle in radiants
         </script>
-    </body>
-</html>
+</body></html>

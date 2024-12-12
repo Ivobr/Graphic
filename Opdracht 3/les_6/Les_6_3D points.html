@@ -1,0 +1,170 @@
+<!DOCTYPE html> <html> <body>
+<canvas id="myCanvas" width="640" height="480" style="border:5px solid #ff0000;">
+<script>
+var c = document.getElementById("myCanvas");
+var ctx = c.getContext("2d");
+// points of a tetrahedron as a set of 4 triangles 
+const tetra =[[50,50,50,1],[150,50,50,1],[150,150,50,1],
+		   [50,50,50,1],[150,50,50,1],[125,75,150,1],
+		   [50,50,50,1],[125,75,150,1],[150,150,50,1],
+		   [150,50,50,1],[150,150,50,1],[125,75,150,1]
+		  ] ; // homogeneous coordinates
+const cube=generateCube([320,240,100,1],100);
+var t=[100,100,100,1] ; // rotation center and center of the tetraedron
+var s=[320,120,100,1] ; // rotation point and center of the cube
+var Ar=-2.5/180*Math.PI ; // rotation angle in radiants
+// building translation and rotation matrixes for both solids
+var T1=[[1,0,0,-t[0]],[0,1,0,-t[1]],[0,0,1,-t[2]],[0,0,0,1]] ; // forward translation matrix
+var T2=[[1,0,0,t[0]],[0,1,0,t[1]],[0,0,1,t[2]],[0,0,0,1]] ; // back translation matrix 
+var S1=[[1,0,0,-s[0]],[0,1,0,-s[1]],[0,0,1,-s[2]],[0,0,0,1]] ; // forward translation matrix
+var S2=[[1,0,0,s[0]],[0,1,0,s[1]],[0,0,1,s[2]],[0,0,0,1]] ; // back translation matrix 
+var Rx=[[1,0,0,0],[0,Math.cos(Ar),-Math.sin(Ar),0],[0,Math.sin(Ar),Math.cos(Ar),0],[0,0,0,1]] ;
+var Ry=[[Math.cos(Ar),0,Math.sin(Ar),0],[0,1,0,0],[-Math.sin(Ar),0,Math.cos(Ar),0],[0,0,0,1]] ;
+var Rz=[[Math.cos(Ar),-Math.sin(Ar),0,0],[Math.sin(Ar),Math.cos(Ar),0,0],[0,0,1,0],[0,0,0,1]] ;
+var I=[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]] ;
+
+// CHANGE PROJECTION METHOD
+// by modifying lines 50..55 in function plotProjectedSolid(lp)   
+
+// defines the rotation around the T fixed point by angle Ar
+M2=multiplyMatrixByMatrix(multiplyMatrixByMatrix(T2,Rz),T1) ;
+// defines the rotation around the S fixed point by angle Ar
+S2=multiplyMatrixByMatrix(multiplyMatrixByMatrix(S2,multiplyMatrixByMatrix(Ry,Rz)),S1) ;
+// defines the solid that will be the rotated terahedron (to preserve the original one)
+p=multiplyMatrixByPoints(I,tetra) ; // acts as a copy function
+// defines the solid that will be the rotated terahedron (to preserve the original one)
+q=multiplyMatrixByPoints(I,cube) ; // acts as a copy function
+
+// call the poly drawing code every 50 mS
+setInterval(transformAndDraw, 50);
+
+// end of code
+
+// support functions
+function orthoProjection(p) {
+    var orthoMatrix=[[1,0,0,0],[0,1,0,0],[0,0,0,0],[0,0,0,0]] ;
+	let f=multiplyMatrixByPoints(orthoMatrix,p) ; // projects all the points
+	return(f) ;
+}
+
+function parallelProjection(p) {
+    // todo
+	//return(f) ;
+}
+
+function isometricProjection(p) {
+    // todo
+	//return(f) ;
+}
+
+function plotProjectedSolid(lp) { // plots each 2D triangle
+  f=orthoProjection(lp) ; // orthographic projection on all the points
+  //f=isometricProjection(lp) ; // isometric projection on all the points
+  //f=parallelProjection(lp) ; // parallel projection on all the points
+  //f=perspectiveProjection(lp) ; // perspective projection on all the points
+  for (let i=0;i<f.length;i=i+3) { // takes 3 points at a time
+	plotPoly([f[i],f[i+1],f[i+2]]) ;
+	}
+}
+
+
+
+function transformAndDraw() {
+  ctx.clearRect(0,0,640,480); // clear all
+  p=multiplyMatrixByPoints(M2,p); // this one changes the value of p and q
+  q=multiplyMatrixByPoints(S2,q); // to achieve a progressive "build up" of the rotation.
+  ctx.strokeStyle="blue"
+  plotProjectedSolid(p) ; // here we select the projection version
+  ctx.strokeStyle="green"
+  plotProjectedSolid(q) ;
+}
+
+function plotPoly(p) {
+	ctx.beginPath(); 
+	ctx.moveTo(p[0][0],p[0][1]);
+	for (let i = 1; i <p.length; i++) // start from p[1] as plot is already in p[0]
+		{ ctx.lineTo(p[i][0],p[i][1]); }
+	ctx.lineTo(p[0][0],p[0][1]); // closing path
+	ctx.stroke();
+}
+
+function translatePoints(p,T) {
+    let Tx=T[0] ; // this is the X component of the translation
+	let Ty=T[1] ; // this is the Y component of the translation
+	for (let i = 0; i <p.length; i++) 
+		{ p[i]=[p[i][0]+Tx,p[i][1]+Ty]; }
+}
+
+function scalePoints(p,S) { // S is just a number
+	for (let i = 0; i <p.length; i++) 
+		{ p[i]=[ S*p[i][0] , S*p[i][1]]; }
+}
+
+function multiplyMatrixByVector(M,V) { // does not alter the vector
+    let R=[0,0,0,0] ;
+	for (let i=0 ; i<4; i++) {
+	  for (let j=0 ; j<4; j++) {
+	    R[i]+=M[i][j]*V[j] ;
+	  }
+	}
+	return(R);
+}
+
+function multiplyMatrixByMatrix(M1,M2) {
+let Mres=[[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]] ; //contains the initial result matrix
+for (let i=0 ; i<4; i++) {
+	for (let j=0; j<4;j++) {
+	    for (let k=0; k<4;k++) {
+	       Mres[i][j]+=M1[i][k]*M2[k][j] ;
+	      }
+	   }
+	} 
+return(Mres) ;
+}
+
+
+function multiplyMatrixByPoints(M,p) {
+    let q=[] ;
+	for (let i = 0; i <p.length; i++) 
+		{ q[i]=multiplyMatrixByVector(M,p[i]); }  
+    return(q) ;		
+}
+
+function printPoints(p) { // works both with normal and homogeneous coordinates
+    ctx.font = "30px Arial"; 
+	for (let i = 0; i <p.length; i++) 
+		{ ctx.fillText(p[i][0].toFixed(2),10,50*(i+1)+0) ;
+		  ctx.fillText(p[i][1].toFixed(2),110,50*(i+1)+0) ;
+		  ctx.fillText(p[i][2].toFixed(2),210,50*(i+1)+0) ;
+		  ctx.fillText(p[i][3].toFixed(2),310,50*(i+1)+0) ;
+		}
+}
+
+function printMatrix(M) {
+    ctx.font = "22px Arial"; 
+	for (let i = 0; i <4; i++) 
+		{ ctx.fillText(M[i][0].toFixed(2),10,50*(i+1)) ;
+		  ctx.fillText(M[i][1].toFixed(2),110,50*(i+1)) ;
+		  ctx.fillText(M[i][2].toFixed(2),210,50*(i+1)) ;
+		  ctx.fillText(M[i][3].toFixed(2),310,50*(i+1)) ;
+		}
+}
+
+function generateCube(center, sideLength) {
+    // generates the set of points
+	d=sideLength/2.0 ;
+	c=center ;
+	pp=[[c[0]-d,c[1]-d,c[2]-d,1],[c[0]+d,c[1]-d,c[2]-d,1],
+	    [c[0]+d,c[1]+d,c[2]-d,1],[c[0]-d,c[1]+d,c[2]-d,1],
+	    [c[0]-d,c[1]-d,c[2]+d,1],[c[0]+d,c[1]-d,c[2]+d,1],
+	    [c[0]+d,c[1]+d,c[2]+d,1],[c[0]-d,c[1]+d,c[2]+d,1]]
+	localCube=[pp[0],pp[1],pp[2],pp[2],pp[3],pp[0],
+	      pp[0],pp[4],pp[3],pp[4],pp[7],pp[3],
+	      pp[0],pp[1],pp[4],pp[1],pp[5],pp[4],
+		  pp[1],pp[5],pp[2],pp[5],pp[2],pp[6],
+		  pp[2],pp[6],pp[3],pp[6],pp[3],pp[7],
+		  pp[6],pp[7],pp[4],pp[4],pp[5],pp[6]] ;
+	return(localCube) ;
+}
+</script>
+</body> </html>

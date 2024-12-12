@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <canvas id="canvas" width="640" height="800" style="border:5px solid black"></canvas>
+    
+        <script>
+            var c = document.getElementById('canvas');
+            var ctx = c.getContext('2d');
+        
+            // Function to draw a line
+            function drawLine(x1, y1, x2, y2) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            }
+        
+            // Define cube vertices
+            const cubeVertices = [
+            { x: -50, y: -50, z: -50 }, // 0
+            { x: 50, y: -50, z: -50 },  // 1
+            { x: 50, y: 50, z: -50 },   // 2
+            { x: -50, y: 50, z: -50 },  // 3
+            { x: -50, y: -50, z: 50 },  // 4
+            { x: 50, y: -50, z: 50 },   // 5
+            { x: 50, y: 50, z: 50 },    // 6
+            { x: -50, y: 50, z: 50 }    // 7
+            ];
+        
+            // Project 3D points to 2D (basic perspective projection)
+            function project(vertex) {
+            const scale = 300 / (300 - vertex.z); // Simulate perspective
+            return {
+                x: canvas.width / 2 + vertex.x * scale,
+                y: canvas.height / 2 - vertex.y * scale
+            };
+            }
+        
+            // Draw the cube
+            function drawCube() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const projected = cubeVertices.map(project);
+        
+            // Connect front face
+            drawLine(projected[0].x, projected[0].y, projected[1].x, projected[1].y);
+            drawLine(projected[1].x, projected[1].y, projected[2].x, projected[2].y);
+            drawLine(projected[2].x, projected[2].y, projected[3].x, projected[3].y);
+            drawLine(projected[3].x, projected[3].y, projected[0].x, projected[0].y);
+        
+            // Connect back face
+            drawLine(projected[4].x, projected[4].y, projected[5].x, projected[5].y);
+            drawLine(projected[5].x, projected[5].y, projected[6].x, projected[6].y);
+            drawLine(projected[6].x, projected[6].y, projected[7].x, projected[7].y);
+            drawLine(projected[7].x, projected[7].y, projected[4].x, projected[4].y);
+        
+            // Connect edges between front and back faces
+            drawLine(projected[0].x, projected[0].y, projected[4].x, projected[4].y);
+            drawLine(projected[1].x, projected[1].y, projected[5].x, projected[5].y);
+            drawLine(projected[2].x, projected[2].y, projected[6].x, projected[6].y);
+            drawLine(projected[3].x, projected[3].y, projected[7].x, projected[7].y);
+            }
+        
+            // Animate rotation
+            function rotateCube() {
+            const angle = 0.01; // Rotation angle
+            cubeVertices.forEach(v => {
+                const x = v.x, z = v.z;
+                v.x = x * Math.cos(angle) - z * Math.sin(angle); // Rotate around Y axis
+                v.z = z * Math.cos(angle) + x * Math.sin(angle);
+            });
+            drawCube();
+            requestAnimationFrame(rotateCube);
+            }
+        
+            // Start animation
+            rotateCube();
+        </script>
+      </body>
+</html>
