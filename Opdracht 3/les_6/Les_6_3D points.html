@@ -49,7 +49,9 @@ function orthoProjection(p) {
 
 function parallelProjection(p) {
     // todo
-	//return(f) ;
+	var parallelMatrix=[[0,1,0,0], [0,0,1,1], [1,0,0,0], [1,0,0,0]];
+	let f = multiplyMatrixByPoints(parallelMatrix, p);
+	return(f) ;
 }
 
 function isometricProjection(p) {
@@ -60,7 +62,7 @@ function isometricProjection(p) {
 function plotProjectedSolid(lp) { // plots each 2D triangle
   f=orthoProjection(lp) ; // orthographic projection on all the points
   //f=isometricProjection(lp) ; // isometric projection on all the points
-  //f=parallelProjection(lp) ; // parallel projection on all the points
+  f=parallelProjection(lp) ; // parallel projection on all the points
   //f=perspectiveProjection(lp) ; // perspective projection on all the points
   for (let i=0;i<f.length;i=i+3) { // takes 3 points at a time
 	plotPoly([f[i],f[i+1],f[i+2]]) ;
