@@ -23,7 +23,8 @@
                     [5,6],
                     [2,6],
                     [6,7],
-                    [3,7]
+                    [3,7],
+                    [4,7]
                 ];
 
         const ROTATION_SPEED = 0.5 // radians per second
@@ -36,13 +37,15 @@
 
             let angle = ROTATION_SPEED * 0.001 * (Date.now() - StartTime);
 
+
+            let rotatedVertices = vertices.map(v => rotateVertex(v, angle));
+            let projectedVertices = rotatedVertices.map(v => projectVertex(v));
+
             edges.forEach(edge => {
                 let [start, end] = edge;
-                drawLine()
+                drawLine(projectedVertices[start], projectedVertices[end]);
             })
             
-            drawLine(vertices[0], vertices[1]);
-
             
         }
 
@@ -52,5 +55,30 @@
             ctx.lineTo(vertex2[0], vertex2[1]);
             ctx.stroke();
         }
+
+        function rotateVertex(vertex, angle) {
+            let [x, y, z] = vertex;
+
+            // Rotation matrix for Y-axis
+            let cosA = Math.cos(angle);
+            let sinA = Math.sin(angle);
+            let xRot = x * cosA + z * sinA;
+            let zRot = x * sinA - z * cosA;
+
+            return [xRot, y, zRot];
+        }
+
+        // Project a 3D vertex onto a 2D canvas
+        function projectVertex(vertex) {
+            let [x, y, z] = vertex;
+            let scale = 200 / (z + 4); // Perspective projection
+            let x2D = x * scale + c.width / 2;
+            let y2D = -y * scale + c.height / 2; // Invert Y-axis for canvas
+
+            return [x2D, y2D];
+        }
+
+        setInterval(draw, 50);
+        
     </script>
 </body></html>

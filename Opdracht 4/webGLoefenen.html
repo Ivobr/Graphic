@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+    <canvas id="myCanvas" width="800" height="600" style="border:5px solid"></canvas>
+    <script type="text/javascript">
+        var gl= document.getElementById("myCanvas").getContext("webgl2");
+
+        var vs = gl.createShader(gl.VERTEX_SHADER);
+        var vsSource = `#version 300 es in vec3 pos;
+                        void main(){
+                            gl_Position = vec4(pos, 1.0);
+                        }`;
+        gl.shaderSource(vs, vsSource);
+        gl.compileShader(vs);
+    </script>
+</html>
