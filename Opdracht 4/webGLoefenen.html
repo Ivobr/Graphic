@@ -1,54 +1,103 @@
 <!DOCTYPE html>
 <html>
-    <body>
-    <canvas id="myCanvas" width="800" height="600"></canvas>
-        <script type="text/javascript">
-            var gl= document.getElementById("myCanvas").getContext("webgl2");
+<canvas id="Rarri" width="640" height="480"></canvas>
+<script type="text/javascript">
+    var gl = document.getElementById("Rarri").getContext("webgl2"); 
+    
+    let vertices = new Float32Array([
+        1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1, // front face
+        1, 1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1 // back face
+    ]);
+    let arrayBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, arrayBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-            var vs = gl.createShader(gl.VERTEX_SHADER);
-            var vsSource = `#version 300 es 
-                in vec3 pos;
-                void main(){
-                    gl_Position = vec4(pos, 1.0);
-                }`;
+    var edges = new Uint16Array([
+        0, 1, 1, 2, 2, 3, 3, 0, // front edges
+        4, 5, 5, 6, 6, 7, 7, 4, // back edges
+        0, 4, 1, 5, 2, 6, 3, 7  // front-to-back edges
+    ]);
+    let elementArrayBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, elementArrayBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, edges, gl.STATIC_DRAW);
 
-            gl.shaderSource(vs, vsSource);
-            gl.compileShader(vs);
+    let vs = gl.createShader(gl.VERTEX_SHADER);
+    let vsSource = `#version 300 es
+        in vec3 aPos;
+        uniform mat4 projection;
+        uniform mat4 translation;
+        uniform mat4 rotation;
+        void main() {
+            gl_Position = projection * translation * rotation * vec4(aPos, 1.0);
+        }`;
+    gl.shaderSource(vs, vsSource);
+    gl.compileShader(vs);
+    if (!gl.getShaderParameter(vs, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(vs));
+    }
 
-            var fs = gl.createShader(gl.FRAGMENT_SHADER);
-            var fsSource = `#version 300 es
-                            precision mediump float;
-                            out vec4 fragColor;
-                            void main(){
-                                fragColor = vec4(1, 0.5, 1.0, 1.0);
-                            }`;
-            gl.shaderSource(fs, fsSource);
-            gl.compileShader(fs);
+    let fs = gl.createShader(gl.FRAGMENT_SHADER);
+    let fsSource = `#version 300 es
+        precision mediump float;
+        out vec4 fragColor;
+        void main() {
+            fragColor = vec4(1, 0.5, 1.0, 1.0);
+        }`;
+    gl.shaderSource(fs, fsSource);
+    gl.compileShader(fs);
+    if (!gl.getShaderParameter(fs, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(fs));
+    }
 
-            var program = gl.createProgram();
-            gl.attachShader(program, vs);
-            gl.attachShader(program, fs);
-            gl.linkProgram(program);
-            gl.useProgram(program);
+    let program = gl.createProgram();
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(program));
+    }
+    gl.useProgram(program);
 
-            var buffer = gl.createBuffer()
-            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-                -0.5, 0, 0,
-                0, 0.5, 0,
-                0.5, -0.5, 0,
-                -1,0,0,
-                0, 1, 0,
-                1, -1, 0]), gl.STATIC_DRAW);
+    // Uniform matrices
+    let rotationLocation = gl.getUniformLocation(program, "rotation");
+    let angle = Math.PI / 6;
+    let c = Math.cos(angle);
+    let s = Math.sin(angle);
+    let rotation = new Float32Array([
+        c, -s, 0, 0,
+        s, c, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    ]);
+    gl.uniformMatrix4fv(rotationLocation, false, rotation);
 
-            var attr = gl.getAttribLocation(program, "pos");
-            gl.vertexAttribPointer(attr, 3, gl.FLOAT, gl.FALSE, 0,0);
-            gl.enableVertexAttribArray(attr);
+    let translationLocation = gl.getUniformLocation(program, "translation");
+    let translation = new Float32Array([
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    ]);
+    gl.uniformMatrix4fv(translationLocation, false, translation);
 
-            gl.clearColor(0.8, 0.8, 0.8, 1.0);
-            gl.clear(gl.COLOR_BUFFER_BIT);
-            gl.drawArrays(gl.LINE_LOOP, 0, 3);
-            gl.drawArrays(gl.LINE_LOOP, 4, 6);
-        </script>
-    </body>
+    let projectionLocation = gl.getUniformLocation(program, "projection");
+    let projection = new Float32Array([
+        1, 0, 0, 0, 
+        0, 1, 0, 0, 
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    ]);
+    gl.uniformMatrix4fv(projectionLocation, false, projection);
+
+    let posLocation = gl.getAttribLocation(program, "aPos");
+    gl.vertexAttribPointer(posLocation, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(posLocation);
+
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.enable(gl.DEPTH_TEST);
+
+    gl.clearColor(0.1, 0.1, 0.1, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.drawElements(gl.LINES, edges.length, gl.UNSIGNED_SHORT, 0);
+</script>
 </html>
